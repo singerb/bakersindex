@@ -28,13 +28,11 @@ const data = {
   navMain: [
     {
       title: "Add new formula",
-      url: "new",
+      url: "/formula/new",
       icon: SquarePlus,
     },
   ],
 };
-
-// TODO: how to make the /app NavLink not need to know the "app" part
 
 export function AppSidebar({ formulas, ...props }: React.ComponentProps<typeof Sidebar> & { formulas: Formulas | undefined }) {
   return (

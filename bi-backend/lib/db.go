@@ -19,8 +19,12 @@ type Model struct {
 
 type Formula struct {
 	Model
-	Name  string `json:"name"`
+	Name string `json:"name"`
 	User string `json:"user" gorm:"index"`
+}
+
+type FormulaInput struct {
+	Name string `json:"name"`
 }
 
 func Connect() (*gorm.DB, error) {
@@ -41,7 +45,7 @@ func SetupDB(db *gorm.DB) error {
 
 	// Migrate the schema
 	// TODO: introduce a version concept
-	db.AutoMigrate(&Formula{});
+	db.AutoMigrate(&Formula{})
 
 	// Create
 	formula := Formula{Name: "Basic Sourdough", User: "auth0|693498138ccef11815d504df"}
@@ -64,4 +68,22 @@ func GetFormula(db *gorm.DB, userId string, formulaId uint) (Formula, error) {
 	formula, err := gorm.G[Formula](db).Where(&Formula{Model: Model{ID: formulaId}, User: userId}).First(ctx)
 
 	return formula, err
+}
+
+func CreateFormula(db *gorm.DB, userId string, formulaInput *FormulaInput) (Formula, error) {
+	var formula Formula
+	formula.Name = formulaInput.Name
+	formula.User = userId
+
+	ctx := context.Background()
+	err := gorm.G[Formula](db).Create(ctx, &formula)
+
+	return formula, err
+}
+
+func DeleteFormula(db *gorm.DB, userId string, formulaId uint) error {
+	ctx := context.Background()
+	_, err := gorm.G[Formula](db).Where(&Formula{Model: Model{ID: formulaId}, User: userId}).Delete(ctx)
+
+	return err
 }
