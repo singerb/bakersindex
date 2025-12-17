@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"os"
 	"strconv"
@@ -14,6 +15,21 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
+
+type Status struct {
+	Ok bool `json:"ok"`
+}
+
+func checkUser(w http.ResponseWriter, r *http.Request) (string, error) {
+	claims, ok := r.Context().Value(jwtmiddleware.ContextKey{}).(*validator.ValidatedClaims)
+	if !ok {
+		http.Error(w, "failed to get validated claims", http.StatusInternalServerError)
+		return "", errors.New("failed to get validated claims")
+	}
+	userId := claims.RegisteredClaims.Subject
+
+	return userId, nil
+}
 
 func main() {
 	lib.LoadEnv()
@@ -28,12 +44,10 @@ func main() {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/formulas", middleware.ValidateJWT(audience, domain, func(w http.ResponseWriter, r *http.Request) {
-		claims, ok := r.Context().Value(jwtmiddleware.ContextKey{}).(*validator.ValidatedClaims)
-		if !ok {
-			http.Error(w, "failed to get validated claims", http.StatusInternalServerError)
+		userId, err := checkUser(w, r)
+		if err != nil {
 			return
 		}
-		userId := claims.RegisteredClaims.Subject
 
 		formulas, err := lib.GetFormulas(db, userId)
 
@@ -45,12 +59,10 @@ func main() {
 	})).Methods("GET")
 
 	r.HandleFunc("/formula/{formulaId}", middleware.ValidateJWT(audience, domain, func(w http.ResponseWriter, r *http.Request) {
-		claims, ok := r.Context().Value(jwtmiddleware.ContextKey{}).(*validator.ValidatedClaims)
-		if !ok {
-			http.Error(w, "failed to get validated claims", http.StatusInternalServerError)
+		userId, err := checkUser(w, r)
+		if err != nil {
 			return
 		}
-		userId := claims.RegisteredClaims.Subject
 
 		vars := mux.Vars(r)
 		formulaId, err := strconv.ParseUint(vars["formulaId"], 10, 0)
@@ -67,8 +79,52 @@ func main() {
 		json.NewEncoder(w).Encode(formula)
 	})).Methods("GET")
 
-	r.HandleFunc("/", middleware.NotFoundHandler);
+	r.HandleFunc("/formula/{formulaId}", middleware.ValidateJWT(audience, domain, func(w http.ResponseWriter, r *http.Request) {
+		userId, err := checkUser(w, r)
+		if err != nil {
+			return
+		}
+
+		vars := mux.Vars(r)
+		formulaId, err := strconv.ParseUint(vars["formulaId"], 10, 0)
+		if err != nil {
+			http.Error(w, "failed to get formula id", http.StatusInternalServerError)
+			return
+		}
+		err = lib.DeleteFormula(db, userId, uint(formulaId))
+
+		if err != nil {
+			http.Error(w, "failed to delete formula", http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(Status{Ok: true})
+	})).Methods("DELETE")
+
+	r.HandleFunc("/formula", middleware.ValidateJWT(audience, domain, func(w http.ResponseWriter, r *http.Request) {
+		userId, err := checkUser(w, r)
+		if err != nil {
+			return
+		}
+
+		var formula lib.FormulaInput
+		json.NewDecoder(r.Body).Decode(&formula)
+
+		fullFormula, err := lib.CreateFormula(db, userId, &formula)
+
+		if err != nil {
+			http.Error(w, "failed to create formula", http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(fullFormula)
+	})).Methods("POST")
+
+	r.HandleFunc("/", middleware.NotFoundHandler)
 
 	// TODO: better CORS headers
-	http.ListenAndServe(":8080", handlers.CORS(handlers.AllowedOrigins([]string{"*"}), handlers.AllowedHeaders([]string{"Authorization"}))(r))
+	corsWrap := handlers.CORS(handlers.AllowedOrigins([]string{"*"}), handlers.AllowedHeaders([]string{"Authorization", "Content-Type"}), handlers.AllowedMethods([]string{"GET", "POST", "DELETE"}))(r)
+
+	// log our requests
+	logWrap := handlers.LoggingHandler(os.Stdout, corsWrap)
+
+	http.ListenAndServe(":8080", logWrap)
 }

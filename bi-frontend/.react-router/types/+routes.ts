@@ -24,12 +24,15 @@ type Pages = {
       "formulaId": string;
     };
   };
+  "/formula/new": {
+    params: {};
+  };
 };
 
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/callback" | "/formulas" | "/formula/:formulaId";
+    page: "/" | "/callback" | "/formulas" | "/formula/:formulaId" | "/formula/new";
   };
   "Home.tsx": {
     id: "Home";
@@ -41,7 +44,7 @@ type RouteFiles = {
   };
   "MainPage.tsx": {
     id: "MainPage";
-    page: "/" | "/formulas" | "/formula/:formulaId";
+    page: "/" | "/formulas" | "/formula/:formulaId" | "/formula/new";
   };
   "Formulas.tsx": {
     id: "formulasIndex";
@@ -53,5 +56,9 @@ type RouteFiles = {
   "Formula.tsx": {
     id: "Formula";
     page: "/formula/:formulaId";
+  };
+  "CreateFormula.tsx": {
+    id: "CreateFormula";
+    page: "/formula/new";
   };
 };

@@ -8,5 +8,6 @@ export default [
     index("Formulas.tsx", { id: "formulasIndex" }),
     route("formulas", "Formulas.tsx"),
     route("formula/:formulaId", "Formula.tsx"),
+    route("formula/new", "CreateFormula.tsx"),
   ]),
 ] satisfies RouteConfig;
