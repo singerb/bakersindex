@@ -3,16 +3,30 @@ import { z } from "zod";
 
 const upfetch = up(fetch);
 
+const Part = z.object({
+  id: z.number(),
+  ingredient: z.string(),
+  percent: z.float32(),
+  isBase: z.boolean(),
+});
+
 const Formula = z.object({
   id: z.number(),
   name: z.string(),
+  parts: z.array(Part),
 });
 
-const Formulas = z.array(Formula);
+const Formulas = z.array(z.object({id: z.number(), name: z.string()}));
 
 // TODO: can zod do extension, i.e. define this and then add an id to it? yes, we can spread or .extend()
 const FormulaInput = z.object({
   name: z.string(),
+});
+
+const PartInput = z.object({
+  ingredient: z.string(),
+  percent: z.float32(),
+  isBase: z.boolean(),
 });
 
 const Status = z.object({
@@ -21,7 +35,9 @@ const Status = z.object({
 
 export type Formulas = z.infer<typeof Formulas>;
 export type Formula = z.infer<typeof Formula>;
+export type Part = z.infer<typeof Part>;
 export type FormulaInput = z.infer<typeof FormulaInput>;
+export type PartInput = z.infer<typeof PartInput>;
 export type Status = z.infer<typeof Status>;
 
 export async function loadFormulas(accessToken: string) {

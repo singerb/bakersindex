@@ -21,10 +21,26 @@ type Formula struct {
 	Model
 	Name string `json:"name"`
 	User string `json:"user" gorm:"index"`
+	Parts []FormulaPart `json:"parts"`
 }
 
 type FormulaInput struct {
 	Name string `json:"name"`
+	Parts []PartInput `json:"parts"`
+}
+
+type FormulaPart struct {
+	Model
+	Ingredient string `json:"ingredient"`
+	Percent float32 `json:"percent"`
+	IsBase bool `json:"isBase"`
+	FormulaID uint `json:"-"`
+}
+
+type PartInput struct {
+	Ingredient string `json:"ingredient"`
+	Percent uint `json:"percent"`
+	IsBase bool `json:"isBase"`
 }
 
 func Connect() (*gorm.DB, error) {
@@ -42,13 +58,14 @@ func SetupDB(db *gorm.DB) error {
 	// Clean up old tables
 	result := gorm.WithResult()
 	err := gorm.G[any](db, result).Exec(context.Background(), "DROP TABLE formulas")
+	err = gorm.G[any](db, result).Exec(context.Background(), "DROP TABLE formula_parts")
 
 	// Migrate the schema
 	// TODO: introduce a version concept
-	db.AutoMigrate(&Formula{})
+	db.AutoMigrate(&Formula{}, &FormulaPart{})
 
 	// Create
-	formula := Formula{Name: "Basic Sourdough", User: "auth0|693498138ccef11815d504df"}
+	formula := Formula{Name: "Basic Sourdough", User: "auth0|693498138ccef11815d504df", Parts: []FormulaPart{{Ingredient: "Flour", Percent: 100.0, IsBase: true}, {Ingredient: "Water", Percent: 75.0, IsBase: false}}}
 	err = gorm.G[Formula](db).Create(ctx, &formula)
 	formula = Formula{Name: "Another Sourdough", User: "fakeuser"}
 	err = gorm.G[Formula](db).Create(ctx, &formula)
@@ -65,7 +82,7 @@ func GetFormulas(db *gorm.DB, userId string) ([]Formula, error) {
 
 func GetFormula(db *gorm.DB, userId string, formulaId uint) (Formula, error) {
 	ctx := context.Background()
-	formula, err := gorm.G[Formula](db).Where(&Formula{Model: Model{ID: formulaId}, User: userId}).First(ctx)
+	formula, err := gorm.G[Formula](db).Preload("Parts", nil).Where(&Formula{Model: Model{ID: formulaId}, User: userId}).First(ctx)
 
 	return formula, err
 }
@@ -74,6 +91,7 @@ func CreateFormula(db *gorm.DB, userId string, formulaInput *FormulaInput) (Form
 	var formula Formula
 	formula.Name = formulaInput.Name
 	formula.User = userId
+	formula.Parts = []FormulaPart{}
 
 	ctx := context.Background()
 	err := gorm.G[Formula](db).Create(ctx, &formula)
