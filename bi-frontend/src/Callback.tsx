@@ -11,8 +11,9 @@ const CallbackPage: React.FC = () => {
     );
   }
 
-  return (<div className="flex items-center justify-center h-screen">
+  return (<div className="flex flex-col items-center justify-center h-screen">
     <Spinner className="size-24" />
+    <p className="font-bold">Logging in...</p>
   </div>)
 };
 
