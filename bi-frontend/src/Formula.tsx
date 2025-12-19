@@ -8,6 +8,7 @@ import { Trash } from "lucide-react";
 import { Table, TableCaption, TableHeader, TableHead, TableRow, TableBody, TableCell, TableFooter } from "@/components/ui/table";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 
 export const handle = {
   title: (data: Formula | undefined) => "The Baker's Index - " + (data?.name || "Unknown formula"),
@@ -16,6 +17,8 @@ export const handle = {
 type FormulaParams = {
   formulaId: number;
 };
+
+type State = "normal" | "deleting";
 
 export async function clientLoader({ params }: { params: FormulaParams }) {
   const formulaId = params.formulaId;
@@ -33,6 +36,7 @@ clientLoader.hydrate = true as const;
 function Formula({ loaderData: formula }: { loaderData: Formula | undefined }) {
   const navigate = useNavigate();
   const { revalidate } = useRevalidator();
+  const [state, setState] = useState<State>("normal");
 
   // TODO: eventually these need to be persisted per-formula in meta
   const [quantity, setQuantity] = useState(1);
@@ -43,6 +47,8 @@ function Formula({ loaderData: formula }: { loaderData: Formula | undefined }) {
   }
 
   const handleDelete = async () => {
+    setState("deleting");
+
     // TODO: needs a dialog popup layer
     const token = await client.getTokenSilently();
 
@@ -66,6 +72,16 @@ function Formula({ loaderData: formula }: { loaderData: Formula | undefined }) {
   // TODO: consider using math.js for better rounding/precision?
   const totalPercent = formula.parts.sort((a, b) => a.isBase ? -1 : (b.isBase ? 1 : 0)).reduce((acc, val) => acc + val.percent, 0);
   const baseWeight = totalWeight / totalPercent;
+
+  if (state === "deleting") {
+    // TODO: this could be nicer as an translucent overlay
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <Spinner className="size-24 text-red-600" />
+        <p className="text-red-600 font-bold">Deleting...</p>
+      </div>
+    );
+  }
 
   return (
     // <div className="min-h-svh w-full items-center justify-center p-6 md:p-10">

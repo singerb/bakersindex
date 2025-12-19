@@ -39,7 +39,7 @@ type FormulaPart struct {
 
 type PartInput struct {
 	Ingredient string `json:"ingredient"`
-	Percent uint `json:"percent"`
+	Percent float32 `json:"percent"`
 	IsBase bool `json:"isBase"`
 }
 
@@ -88,10 +88,17 @@ func GetFormula(db *gorm.DB, userId string, formulaId uint) (Formula, error) {
 }
 
 func CreateFormula(db *gorm.DB, userId string, formulaInput *FormulaInput) (Formula, error) {
+	// TODO: this whole mess with input types is, well, messy; can do better here, I'm sure
 	var formula Formula
 	formula.Name = formulaInput.Name
 	formula.User = userId
-	formula.Parts = []FormulaPart{}
+	parts := make([]FormulaPart, len(formulaInput.Parts))
+	for i, e := range(formulaInput.Parts) {
+		parts[i].Ingredient = e.Ingredient
+		parts[i].Percent = e.Percent
+		parts[i].IsBase = e.IsBase
+	}
+	formula.Parts = parts
 
 	ctx := context.Background()
 	err := gorm.G[Formula](db).Create(ctx, &formula)
@@ -100,8 +107,8 @@ func CreateFormula(db *gorm.DB, userId string, formulaInput *FormulaInput) (Form
 }
 
 func DeleteFormula(db *gorm.DB, userId string, formulaId uint) error {
-	ctx := context.Background()
-	_, err := gorm.G[Formula](db).Where(&Formula{Model: Model{ID: formulaId}, User: userId}).Delete(ctx)
+	// do this delete with the traditional API to handle cleaning up the relations along with the formula
+	err := db.Select("Parts").Where(&Formula{User: userId}).Delete(&Formula{Model: Model{ID: formulaId}}).Error
 
 	return err
 }

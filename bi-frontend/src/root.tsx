@@ -41,8 +41,9 @@ export function Layout({ children }) {
 }
 
 export function HydrateFallback() {
-  return (<div className="flex items-center justify-center h-screen">
+  return (<div className="flex flex-col items-center justify-center h-screen">
     <Spinner className="size-24" />
+    <p className="font-bold">Loading..</p>
   </div>)
 }
 
