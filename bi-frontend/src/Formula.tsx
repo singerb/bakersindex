@@ -1,14 +1,15 @@
-import { deleteFormula, type Formula, loadFormula } from "@/api";
+import { deleteFormula, editFormula, type Formula, loadFormula } from "@/api";
 import queryClient from "@/query-client";
 import client from "@/auth0-client";
 import { useNavigate, useRevalidator } from "react-router";
 import { Field, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
-import { Trash } from "lucide-react";
+import { Pencil, Trash } from "lucide-react";
 import { Table, TableCaption, TableHeader, TableHead, TableRow, TableBody, TableCell, TableFooter } from "@/components/ui/table";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import FormulaForm, { type FormSchema } from "@/components/formula-form";
 
 export const handle = {
   title: (data: Formula | undefined) => "The Baker's Index - " + (data?.name || "Unknown formula"),
@@ -18,7 +19,7 @@ type FormulaParams = {
   formulaId: number;
 };
 
-type State = "normal" | "deleting";
+type State = "normal" | "editing" | "deleting";
 
 export async function clientLoader({ params }: { params: FormulaParams }) {
   const formulaId = params.formulaId;
@@ -65,6 +66,10 @@ function Formula({ loaderData: formula }: { loaderData: Formula | undefined }) {
     revalidate();
   };
 
+  const handleEdit = () => {
+    setState("editing");
+  };
+
   // TODO: have a mode where you can enter target base yield
   const totalWeight = quantity * weightPer;
 
@@ -81,6 +86,37 @@ function Formula({ loaderData: formula }: { loaderData: Formula | undefined }) {
         <p className="text-red-600 font-bold">Deleting...</p>
       </div>
     );
+  }
+
+  if (state === "editing") {
+    const defaultValues = {
+      ...formula,
+      baseIndex: formula.parts.findIndex((part) => part.isBase).toString(),
+    };
+
+    const submitFn = async ({ value }: { value: FormSchema }) => {
+      const token = await client.getTokenSilently();
+
+      // await API post, get formula back
+      await editFormula(token, formula.id, value);
+      // console.log(newFormula);
+
+      // invalidate all formulas and refetch
+      await queryClient.invalidateQueries({ queryKey: ["formulas"], refetchType: "all" });
+
+      // revalidate the router
+      // TODO: can we do this better with a fetcher or Form plus client action? How can we combine all that with tanstack form?
+      await revalidate();
+
+      // stop editing
+      setState("normal");
+    };
+
+    const cancelFn = () => {
+      setState("normal");
+    };
+
+    return <FormulaForm defaultValues={defaultValues} submitFn={submitFn} formTitle={"Edit " + formula.name} cancelFn={cancelFn} submitText="Saving..." submitButtonText="Save" />
   }
 
   return (
@@ -127,6 +163,7 @@ function Formula({ loaderData: formula }: { loaderData: Formula | undefined }) {
         </TableFooter>
       </Table>
       <Field orientation="horizontal">
+        <Button onClick={handleEdit} className="self-start grow-0 shrink"><Pencil /> Edit</Button>
         <Button onClick={handleDelete} className="self-start grow-0 shrink" variant="destructive"><Trash /> Delete</Button>
       </Field>
     </div>
