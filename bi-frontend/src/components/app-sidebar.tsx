@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import {
+    Croissant,
   ListTodo,
   SquarePlus,
 } from "lucide-react"
@@ -19,6 +20,7 @@ import {
   SidebarMenuItem,
   SidebarMenuSub,
   SidebarMenuSubItem,
+  SidebarFooter,
 } from "@/components/ui/sidebar"
 import { NavLink } from "react-router"
 import { type Formulas } from "@/api"
@@ -38,7 +40,18 @@ export function AppSidebar({ formulas, ...props }: React.ComponentProps<typeof S
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <NavUser />
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton tooltip="Baker's Index">
+              <NavLink to="/">
+                <Croissant />
+              </NavLink>
+              <NavLink to="/" className="text-2xl">
+                Baker's Index
+              </NavLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -66,6 +79,9 @@ export function AppSidebar({ formulas, ...props }: React.ComponentProps<typeof S
         </SidebarGroup>
         <NavMain items={data.navMain} />
       </SidebarContent>
+      <SidebarFooter>
+        <NavUser />
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   )

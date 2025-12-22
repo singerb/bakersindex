@@ -10,7 +10,7 @@ if (!(domain && clientId && redirectUri && audience)) {
   throw new Error("Auth0 not configured!");
 }
 
-const client = new Auth0Client({domain, clientId, authorizationParams: { redirect_uri: redirectUri, audience }});
+const client = new Auth0Client({domain, clientId, cacheLocation: "localstorage", authorizationParams: { redirect_uri: redirectUri, audience }});
 
 export const onRedirectCallback = (appState?: AppState) => {
   window.history.replaceState(

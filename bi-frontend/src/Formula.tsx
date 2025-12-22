@@ -120,8 +120,7 @@ function Formula({ loaderData: formula }: { loaderData: Formula | undefined }) {
   }
 
   return (
-    // <div className="min-h-svh w-full items-center justify-center p-6 md:p-10">
-    <div className="grow-0 shrink self-start p-6 md:p-10">
+    <div className="grow-0 shrink self-start px-10 pt-0 pb-10">
       <h1 className="text-6xl">{formula.name}</h1>
       <FieldSet>
         <FieldLegend>Adjust quantities</FieldLegend>
