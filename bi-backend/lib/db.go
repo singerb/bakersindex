@@ -24,23 +24,12 @@ type Formula struct {
 	Parts []FormulaPart `json:"parts"`
 }
 
-type FormulaInput struct {
-	Name string `json:"name"`
-	Parts []PartInput `json:"parts"`
-}
-
 type FormulaPart struct {
 	Model
 	Ingredient string `json:"ingredient"`
 	Percent float32 `json:"percent"`
 	IsBase bool `json:"isBase"`
 	FormulaID uint `json:"-"`
-}
-
-type PartInput struct {
-	Ingredient string `json:"ingredient"`
-	Percent float32 `json:"percent"`
-	IsBase bool `json:"isBase"`
 }
 
 func Connect() (*gorm.DB, error) {
@@ -87,23 +76,37 @@ func GetFormula(db *gorm.DB, userId string, formulaId uint) (Formula, error) {
 	return formula, err
 }
 
-func CreateFormula(db *gorm.DB, userId string, formulaInput *FormulaInput) (Formula, error) {
-	// TODO: this whole mess with input types is, well, messy; can do better here, I'm sure
-	var formula Formula
-	formula.Name = formulaInput.Name
-	formula.User = userId
-	parts := make([]FormulaPart, len(formulaInput.Parts))
-	for i, e := range(formulaInput.Parts) {
-		parts[i].Ingredient = e.Ingredient
-		parts[i].Percent = e.Percent
-		parts[i].IsBase = e.IsBase
-	}
-	formula.Parts = parts
+func CreateFormula(db *gorm.DB, userId string, formulaInput *Formula) (Formula, error) {
+	formulaInput.User = userId
 
 	ctx := context.Background()
-	err := gorm.G[Formula](db).Create(ctx, &formula)
+	err := gorm.G[Formula](db).Create(ctx, formulaInput)
 
-	return formula, err
+	return *formulaInput, err
+}
+
+func EditFormula(db *gorm.DB, userId string, formulaId uint, formulaInput *Formula) (Formula, error) {
+	formulaInput.User = userId
+
+	// do this in two steps so we delete any parts that got removed, as well as insert new ones
+	existingPartIds := []uint{}
+	for _, e := range formulaInput.Parts {
+		if e.ID > 0 {
+			// we only care about existing parts that have a real ID
+			existingPartIds = append(existingPartIds, e.ID)
+		}
+	}
+
+	// this clears out any removed parts
+	err := db.Not(existingPartIds).Where(&FormulaPart{FormulaID: formulaId}).Delete(&FormulaPart{}).Error
+	if err != nil {
+		return *formulaInput, err
+	}
+
+	// this will insert any new parts
+	err = db.Session(&gorm.Session{FullSaveAssociations: true}).Where(&Formula{Model: Model{ID: formulaId}, User: userId}).Updates(&formulaInput).Error
+
+	return *formulaInput, err
 }
 
 func DeleteFormula(db *gorm.DB, userId string, formulaId uint) error {

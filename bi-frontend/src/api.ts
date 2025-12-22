@@ -20,10 +20,12 @@ const Formulas = z.array(z.object({id: z.number(), name: z.string()}));
 
 // TODO: can zod do extension, i.e. define this and then add an id to it? yes, we can spread or .extend()
 const FormulaInput = z.object({
+  id: z.number().optional(),
   name: z.string(),
 });
 
 const PartInput = z.object({
+  id: z.number().optional(),
   ingredient: z.string(),
   percent: z.float32(),
   isBase: z.boolean(),
@@ -69,6 +71,24 @@ export async function createFormula(
     import.meta.env.VITE_API_BASE + "/formula",
     {
       method: "POST",
+      body: formula,
+      schema: Formula,
+      headers: { Authorization: "Bearer " + accessToken },
+    },
+  );
+
+  return fullFormula;
+}
+
+export async function editFormula(
+  accessToken: string,
+  formulaId: number,
+  formula: FormulaInput,
+) {
+  const fullFormula = await upfetch(
+    import.meta.env.VITE_API_BASE + "/formula/" + formulaId,
+    {
+      method: "PUT",
       body: formula,
       schema: Formula,
       headers: { Authorization: "Bearer " + accessToken },

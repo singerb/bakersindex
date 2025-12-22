@@ -100,13 +100,38 @@ func main() {
 		json.NewEncoder(w).Encode(Status{Ok: true})
 	})).Methods("DELETE")
 
+	r.HandleFunc("/formula/{formulaId}", middleware.ValidateJWT(audience, domain, func(w http.ResponseWriter, r *http.Request) {
+		userId, err := checkUser(w, r)
+		if err != nil {
+			return
+		}
+
+		vars := mux.Vars(r)
+		formulaId, err := strconv.ParseUint(vars["formulaId"], 10, 0)
+		if err != nil {
+			http.Error(w, "failed to get formula id", http.StatusInternalServerError)
+			return
+		}
+
+		var formula lib.Formula
+		json.NewDecoder(r.Body).Decode(&formula)
+
+		fullFormula, err := lib.EditFormula(db, userId, uint(formulaId), &formula)
+
+		if err != nil {
+			http.Error(w, "failed to edit formula", http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(fullFormula)
+	})).Methods("PUT")
+
 	r.HandleFunc("/formula", middleware.ValidateJWT(audience, domain, func(w http.ResponseWriter, r *http.Request) {
 		userId, err := checkUser(w, r)
 		if err != nil {
 			return
 		}
 
-		var formula lib.FormulaInput
+		var formula lib.Formula
 		json.NewDecoder(r.Body).Decode(&formula)
 
 		fullFormula, err := lib.CreateFormula(db, userId, &formula)
@@ -121,7 +146,7 @@ func main() {
 	r.HandleFunc("/", middleware.NotFoundHandler)
 
 	// TODO: better CORS headers
-	corsWrap := handlers.CORS(handlers.AllowedOrigins([]string{"*"}), handlers.AllowedHeaders([]string{"Authorization", "Content-Type"}), handlers.AllowedMethods([]string{"GET", "POST", "DELETE"}))(r)
+	corsWrap := handlers.CORS(handlers.AllowedOrigins([]string{"*"}), handlers.AllowedHeaders([]string{"Authorization", "Content-Type"}), handlers.AllowedMethods([]string{"GET", "POST", "DELETE", "PUT"}))(r)
 
 	// log our requests
 	logWrap := handlers.LoggingHandler(os.Stdout, corsWrap)
