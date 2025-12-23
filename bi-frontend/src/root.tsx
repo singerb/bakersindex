@@ -26,6 +26,7 @@ export function Layout({ children }) {
           href="data:image/x-icon;base64,AA"
         />
         <title>{title || "The Baker's Index"}</title>
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
       </head>
       <body className="bg-sidebar text-stone-700">
         <Auth0ProviderWithNavigate>
