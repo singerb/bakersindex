@@ -31,7 +31,7 @@ function Home() {
         Modern formula management for bakers - replace your custom spreadsheets!
       </h2>
       <Separator className="bg-amber-900 mt-4 py-px" />
-      <div className="w-full grid grid-cols-2 py-4 justify-items-center">
+      <div className="w-full grid grid-cols-1 md:grid-cols-2 py-4 md:justify-items-center gap-4">
         <div>
           <h3 className="text-2xl py-4">
             Features

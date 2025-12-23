@@ -81,8 +81,8 @@ function FormulaForm({ submitFn, cancelFn, submitText, submitButtonText, formTit
           form.handleSubmit()
         }}
       >
-        <div className="grid grid-cols-2 gap-4 w-full my-4">
-          <Card>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full my-4">
+          <Card className="min-w-2xs lg:min-w-auto">
             <CardContent>
               <FieldSet>
                 <FieldLegend>Formula Information</FieldLegend>
@@ -161,7 +161,7 @@ function FormulaForm({ submitFn, cancelFn, submitText, submitButtonText, formTit
               </FieldSet>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="min-w-2xs lg:min-w-auto">
             <CardContent>
               <form.Field name="parts" mode="array">
                 {(field) => {

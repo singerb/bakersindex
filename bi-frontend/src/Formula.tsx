@@ -124,8 +124,8 @@ function Formula({ loaderData: formula }: { loaderData: Formula | undefined }) {
   return (
     <div className="px-10 pt-0 pb-10">
       <h1 className="text-6xl">{formula.name}</h1>
-      <div className="grid grid-cols-3 w-full gap-4 my-4">
-        <Card>
+      <div className="grid grid-cols-1 lg:grid-cols-3 w-full gap-4 my-4">
+        <Card className="min-w-2xs lg:min-w-auto">
           <CardContent>
             <FieldSet>
               <FieldLegend>Adjust quantities</FieldLegend>
@@ -142,7 +142,7 @@ function Formula({ loaderData: formula }: { loaderData: Formula | undefined }) {
             </FieldSet>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="min-w-2xs lg:min-w-auto">
           <CardContent>
             <Table>
               <TableCaption>Formula parts</TableCaption>
@@ -172,7 +172,7 @@ function Formula({ loaderData: formula }: { loaderData: Formula | undefined }) {
             </Table>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="min-w-2xs lg:min-w-auto">
           <CardContent>
             <h3 className="text-2xl">Description</h3>
             <p>Coming soon...</p>
