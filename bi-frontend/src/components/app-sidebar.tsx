@@ -47,7 +47,7 @@ export function AppSidebar({ formulas, ...props }: React.ComponentProps<typeof S
                 <Croissant />
               </NavLink>
               <NavLink to="/" className="text-2xl">
-                Baker's Index
+                The Baker's Index
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>

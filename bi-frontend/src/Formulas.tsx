@@ -26,7 +26,7 @@ function Formulas({ loaderData: formulas }: { loaderData: Formulas | undefined }
       <h1 className="text-6xl">Formulas</h1>
       <div className="flex flex-row flex-wrap">
         {(formulas || []).map((item) => (
-          <Card className="mt-4 mr-4 w-2xs">
+          <Card className="mt-4 mr-4 w-2xs" key={item.id}>
             <CardHeader>
               <CardTitle>
                 <Link to={"/formula/" + item.id}>{item.name}</Link>

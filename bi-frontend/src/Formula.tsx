@@ -10,6 +10,8 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import FormulaForm, { type FormSchema } from "@/components/formula-form";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 export const handle = {
   title: (data: Formula | undefined) => "The Baker's Index - " + (data?.name || "Unknown formula"),
@@ -120,48 +122,64 @@ function Formula({ loaderData: formula }: { loaderData: Formula | undefined }) {
   }
 
   return (
-    <div className="grow-0 shrink self-start px-10 pt-0 pb-10">
+    <div className="px-10 pt-0 pb-10">
       <h1 className="text-6xl">{formula.name}</h1>
-      <FieldSet>
-        <FieldLegend>Adjust quantities</FieldLegend>
-        <FieldGroup>
-          <Field orientation="horizontal">
-            <FieldLabel>Quantity</FieldLabel>
-            <Input type="number" value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value))} />
-          </Field>
-          <Field orientation="horizontal">
-            <FieldLabel>Weight Per</FieldLabel>
-            <Input type="number" value={weightPer} onChange={(e) => setWeightPer(parseFloat(e.target.value))} />
-          </Field>
-        </FieldGroup>
-      </FieldSet>
-      <Table>
-        <TableCaption>Formula parts</TableCaption>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Ingredient</TableHead>
-            <TableHead className="text-right">%</TableHead>
-            <TableHead className="text-right">Weight</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {formula.parts.map((part) => (
-            <TableRow key={part.id}>
-              <TableCell>{part.ingredient}</TableCell>
-              <TableCell className="text-right">{part.percent}%</TableCell>
-              <TableCell className="text-right">{(baseWeight * part.percent).toFixed(2)}g</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-        <TableFooter>
-          <TableRow>
-            <TableCell>Total</TableCell>
-            <TableCell className="text-right">{totalPercent}%</TableCell>
-            <TableCell className="text-right">{totalWeight.toFixed(2)}g</TableCell>
-          </TableRow>
-        </TableFooter>
-      </Table>
-      <Field orientation="horizontal">
+      <div className="grid grid-cols-3 w-full gap-4 my-4">
+        <Card>
+          <CardContent>
+            <FieldSet>
+              <FieldLegend>Adjust quantities</FieldLegend>
+              <FieldGroup>
+                <Field orientation="horizontal">
+                  <FieldLabel>Quantity</FieldLabel>
+                  <Input type="number" value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value))} />
+                </Field>
+                <Field orientation="horizontal">
+                  <FieldLabel>Weight Per</FieldLabel>
+                  <Input type="number" value={weightPer} onChange={(e) => setWeightPer(parseFloat(e.target.value))} />
+                </Field>
+              </FieldGroup>
+            </FieldSet>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent>
+            <Table>
+              <TableCaption>Formula parts</TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Ingredient</TableHead>
+                  <TableHead className="text-right">%</TableHead>
+                  <TableHead className="text-right">Weight</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {formula.parts.map((part) => (
+                  <TableRow key={part.id}>
+                    <TableCell>{part.ingredient}</TableCell>
+                    <TableCell className="text-right">{part.percent}%</TableCell>
+                    <TableCell className="text-right">{(baseWeight * part.percent).toFixed(2)}g</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TableCell>Total</TableCell>
+                  <TableCell className="text-right">{totalPercent}%</TableCell>
+                  <TableCell className="text-right">{totalWeight.toFixed(2)}g</TableCell>
+                </TableRow>
+              </TableFooter>
+            </Table>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent>
+            <h3 className="text-2xl">Description</h3>
+            <p>Coming soon...</p>
+          </CardContent>
+        </Card>
+      </div>
+      <Field orientation="horizontal" className="mt-4">
         <Button onClick={handleEdit} className="self-start grow-0 shrink"><Pencil /> Edit</Button>
         <Button onClick={handleDelete} className="self-start grow-0 shrink" variant="destructive"><Trash /> Delete</Button>
       </Field>
