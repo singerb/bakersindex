@@ -49,26 +49,39 @@ export function HydrateFallback() {
 }
 
 export function ErrorBoundary({ error }: { error: any }) {
-  if (isRouteErrorResponse(error)) {
+  if (import.meta.env.DEV) {
+    if (isRouteErrorResponse(error)) {
+      return (
+        <div className="flex flex-col items-center justify-center">
+          <h1 className="text-red-600 text-6xl block py-4">
+            {error.status} {error.statusText}
+          </h1>
+          <p>{error.data}</p>
+        </div>
+      );
+    } else if (error instanceof Error) {
+      return (
+        <div className="flex flex-col items-center justify-center">
+          <h1 className="text-red-600 text-6xl block py-4">Error</h1>
+          <p>{error.message}</p>
+          <p>The stack trace is:</p>
+          <pre>{error.stack}</pre>
+        </div>
+      );
+    } else {
+      return (
+        <div className="flex flex-col items-center justify-center">
+          <h1 className="text-red-600 text-6xl block py-4">Unknown Error</h1>;
+        </div>
+      );
+    }
+  } else {
     return (
-      <>
-        <h1>
-          {error.status} {error.statusText}
-        </h1>
-        <p>{error.data}</p>
-      </>
-    );
-  } else if (error instanceof Error) {
-    return (
-      <div>
-        <h1>Error</h1>
-        <p>{error.message}</p>
-        <p>The stack trace is:</p>
-        <pre>{error.stack}</pre>
+      <div className="flex flex-col items-center justify-center">
+        <h1 className="text-red-600 text-6xl block py-4">Error</h1>
+        <p>An unexpected error occurred; please refresh and try again.</p>
       </div>
     );
-  } else {
-    return <h1>Unknown Error</h1>;
   }
 }
 
