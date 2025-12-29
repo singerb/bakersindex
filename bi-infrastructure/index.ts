@@ -1,42 +1,93 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
-import * as awsx from "@pulumi/awsx";
+import * as synced_folder from "@pulumi/synced-folder";
 
-// Create an AWS resource (S3 Bucket)
-const bucket = new aws.s3.Bucket("my-bucket");
+const path = "../bi-frontend/build/client"
+const indexDocument = "index.html";
 
-// Export the name of the bucket
-export const bucketName = bucket.id;
+// Create an S3 bucket and configure it as a website.
+const bucket = new aws.s3.Bucket("bucket");
 
-// Turn the bucket into a website:
-const website = new aws.s3.BucketWebsiteConfiguration("website", {
-    bucket: bucket.id,
-    indexDocument: {
-        suffix: "index.html",
+const bucketWebsite = new aws.s3.BucketWebsiteConfiguration("bucketWebsite", {
+    bucket: bucket.bucket,
+    indexDocument: {suffix: indexDocument},
+});
+
+// Configure ownership controls for the new S3 bucket
+const ownershipControls = new aws.s3.BucketOwnershipControls("ownership-controls", {
+    bucket: bucket.bucket,
+    rule: {
+        objectOwnership: "ObjectWriter",
     },
 });
 
-// Permit access control configuration:
-const ownershipControls = new aws.s3.BucketOwnershipControls("ownership-controls", {
-    bucket: bucket.id,
-    rule: {
-        objectOwnership: "ObjectWriter"
-    }
-});
-
-// Enable public access to the website:
+// Configure public ACL block on the new S3 bucket
 const publicAccessBlock = new aws.s3.BucketPublicAccessBlock("public-access-block", {
-    bucket: bucket.id,
+    bucket: bucket.bucket,
     blockPublicAcls: false,
 });
 
-// Create an S3 Bucket object
-const bucketObject = new aws.s3.BucketObject("index.html", {
-    bucket: bucket.id,
-    source: new pulumi.asset.FileAsset("index.html"),
-    contentType: "text/html",
+// Use a synced folder to manage the files of the website.
+const bucketFolder = new synced_folder.S3BucketFolder("bucket-folder", {
+    path: path,
+    bucketName: bucket.bucket,
     acl: "public-read",
-}, { dependsOn: [ownershipControls, publicAccessBlock] });
+}, { dependsOn: [ownershipControls, publicAccessBlock]});
 
-// Export the bucket's autoassigned URL:
-export const url = pulumi.interpolate`http://${website.websiteEndpoint}`;
+// Create a CloudFront CDN to distribute and cache the website.
+const cdn = new aws.cloudfront.Distribution("cdn", {
+    enabled: true,
+    origins: [{
+        originId: bucket.arn,
+        domainName: bucketWebsite.websiteEndpoint,
+        customOriginConfig: {
+            originProtocolPolicy: "http-only",
+            httpPort: 80,
+            httpsPort: 443,
+            originSslProtocols: ["TLSv1.2"],
+        },
+    }],
+    defaultCacheBehavior: {
+        targetOriginId: bucket.arn,
+        viewerProtocolPolicy: "redirect-to-https",
+        allowedMethods: [
+            "GET",
+            "HEAD",
+            "OPTIONS",
+        ],
+        cachedMethods: [
+            "GET",
+            "HEAD",
+            "OPTIONS",
+        ],
+        defaultTtl: 600,
+        maxTtl: 600,
+        minTtl: 600,
+        forwardedValues: {
+            queryString: true,
+            cookies: {
+                forward: "all",
+            },
+        },
+    },
+    priceClass: "PriceClass_100",
+    customErrorResponses: [{
+        errorCode: 404,
+        responseCode: 200,
+        responsePagePath: `/${indexDocument}`,
+    }],
+    restrictions: {
+        geoRestriction: {
+            restrictionType: "none",
+        },
+    },
+    viewerCertificate: {
+        cloudfrontDefaultCertificate: true,
+    },
+});
+
+// Export the URLs and hostnames of the bucket and distribution.
+export const originURL = pulumi.interpolate`http://${bucketWebsite.websiteEndpoint}`;
+export const originHostname = bucketWebsite.websiteEndpoint;
+export const cdnURL = pulumi.interpolate`https://${cdn.domainName}`;
+export const cdnHostname = cdn.domainName;

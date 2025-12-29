@@ -877,6 +877,13 @@
     tmp "^0.2.4"
     upath "^1.1.0"
 
+"@pulumi/synced-folder@^0.12.4":
+  version "0.12.4"
+  resolved "https://registry.yarnpkg.com/@pulumi/synced-folder/-/synced-folder-0.12.4.tgz#27f8ef2432b2646a2db300ac8c28ae47bd0bcb3c"
+  integrity sha512-hQWqF1LImu6D6+2U9dFa80cXb6cMNX9GhpR9FE9TIf5Gt/M48Eu+urgi1gg4xTWPiVAO4E7K2u/zJ+VTgm041w==
+  dependencies:
+    "@pulumi/pulumi" "^3.0.0"
+
 "@sigstore/bundle@^2.3.2":
   version "2.3.2"
   resolved "https://registry.yarnpkg.com/@sigstore/bundle/-/bundle-2.3.2.tgz#ad4dbb95d665405fd4a7a02c8a073dbd01e4e95e"
