@@ -2,7 +2,7 @@ import { Link } from "react-router";
 import { loadFormulas, type Formulas } from "./api"
 import queryClient from "@/query-client";
 import client from "@/auth0-client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const handle = {
   title: () => "The Baker's Index - Formulas",

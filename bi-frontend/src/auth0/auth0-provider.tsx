@@ -7,7 +7,6 @@ import React, {
 } from 'react';
 import {
   Auth0Client,
-  type Auth0ClientOptions,
   type PopupLoginOptions,
   type PopupConfigOptions,
   type GetTokenWithPopupOptions,
@@ -110,7 +109,7 @@ declare const __VERSION__: string;
 /**
  * @ignore
  */
-const toAuth0ClientOptions = (
+/*const toAuth0ClientOptions = (
   opts: Auth0ProviderOptions
 ): Auth0ClientOptions => {
   deprecateRedirectUri(opts);
@@ -122,7 +121,7 @@ const toAuth0ClientOptions = (
       version: __VERSION__,
     },
   };
-};
+};*/
 
 /**
  * @ignore
