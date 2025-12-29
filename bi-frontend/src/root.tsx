@@ -1,4 +1,4 @@
-import { isRouteErrorResponse, Outlet, Scripts, ScrollRestoration, useMatches } from "react-router";
+import { isRouteErrorResponse, Links, Outlet, Scripts, ScrollRestoration, useMatches } from "react-router";
 import { QueryClientProvider } from "@tanstack/react-query";
 import './index.css';
 import { Auth0ProviderWithNavigate } from "./auth0-provider";
@@ -24,6 +24,7 @@ export function Layout({ children }: { children: ReactNode }) {
           rel="icon"
           href="data:image/x-icon;base64,AA"
         />
+        <Links />
         <title>{title || "The Baker's Index"}</title>
         <meta name="viewport" content="width=device-width,initial-scale=1" />
       </head>
