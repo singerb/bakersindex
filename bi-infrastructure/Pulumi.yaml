@@ -1,0 +1,10 @@
+name: bi-infrastructure
+description: Infrastructure and deployment for The Baker's Index
+runtime:
+  name: nodejs
+  options:
+    packagemanager: yarn
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: aws-typescript

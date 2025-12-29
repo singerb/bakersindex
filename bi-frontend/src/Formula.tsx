@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import FormulaForm, { type FormSchema } from "@/components/formula-form";
 import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 
 export const handle = {
   title: (data: Formula | undefined) => "The Baker's Index - " + (data?.name || "Unknown formula"),
