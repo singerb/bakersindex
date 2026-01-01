@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"strconv"
 
 	"bi-backend/lib"
 	"bi-backend/lambda-handlers"
@@ -24,7 +25,14 @@ func init() {
 }
 
 func handleRequest(userId string, pathParameters map[string]string, body string) (any, error) {
-	return lib.GetFormulas(db, userId)
+	formulaId, err := strconv.ParseUint(pathParameters["formulaId"], 10, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	err = lib.DeleteFormula(db, userId, uint(formulaId))
+
+	return lambdahandlers.Status{Ok: true}, err
 }
 
 func main() {

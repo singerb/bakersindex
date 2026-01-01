@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+	"encoding/json"
+	"strconv"
 
 	"bi-backend/lib"
 	"bi-backend/lambda-handlers"
@@ -24,7 +26,15 @@ func init() {
 }
 
 func handleRequest(userId string, pathParameters map[string]string, body string) (any, error) {
-	return lib.GetFormulas(db, userId)
+	formulaId, err := strconv.ParseUint(pathParameters["formulaId"], 10, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var formula lib.Formula
+	json.Unmarshal([]byte(body), &formula)
+
+	return lib.EditFormula(db, userId, uint(formulaId), &formula)
 }
 
 func main() {

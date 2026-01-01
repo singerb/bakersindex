@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"encoding/json"
 
 	"bi-backend/lib"
 	"bi-backend/lambda-handlers"
@@ -24,7 +25,10 @@ func init() {
 }
 
 func handleRequest(userId string, pathParameters map[string]string, body string) (any, error) {
-	return lib.GetFormulas(db, userId)
+	var formula lib.Formula
+	json.Unmarshal([]byte(body), &formula)
+
+	return lib.CreateFormula(db, userId, &formula)
 }
 
 func main() {
