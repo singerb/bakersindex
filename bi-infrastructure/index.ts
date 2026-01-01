@@ -78,36 +78,8 @@ const lambdaRoleAttachment = new aws.iam.RolePolicyAttachment("lambdaRoleAttachm
     policyArn: aws.iam.ManagedPolicy.AWSLambdaBasicExecutionRole,
 });
 
-const lambda = new aws.lambda.Function("lambdaFunction", {
-    code: new pulumi.asset.FileArchive("../bi-backend/lambda-handlers/formulas/bootstrap.zip"),
-    runtime: "provided.al2023",
-    role: lambdaRole.arn,
-    handler: "bootstrap",
-    environment: {
-        variables: {
-            DATABASE_URL: databaseUrl,
-        }
-    },
-});
-
 const apigw = new aws.apigatewayv2.Api("httpApiGateway", {
     protocolType: "HTTP",
-});
-
-const lambdaPermission = new aws.lambda.Permission("lambdaPermission", {
-    action: "lambda:InvokeFunction",
-    principal: "apigateway.amazonaws.com",
-    function: lambda,
-    sourceArn: pulumi.interpolate`${apigw.executionArn}/*/*`,
-}, { dependsOn: [apigw, lambda] });
-
-const integration = new aws.apigatewayv2.Integration("lambdaIntegration", {
-    apiId: apigw.id,
-    integrationType: "AWS_PROXY",
-    integrationUri: lambda.arn,
-    integrationMethod: "POST",
-    payloadFormatVersion: "2.0",
-    passthroughBehavior: "WHEN_NO_MATCH",
 });
 
 // Create the JWT Authorizer
@@ -121,24 +93,78 @@ const jwtAuthorizer = new aws.apigatewayv2.Authorizer("jwtAuthorizer", {
     },
 });
 
-const route = new aws.apigatewayv2.Route("apiRoute", {
-    apiId: apigw.id,
-    routeKey: "GET /api/formulas",
-    target: pulumi.interpolate`integrations/${integration.id}`,
-    authorizationType: "JWT", // Specify JWT authorization
-    authorizerId: jwtAuthorizer.id, // Link the authorizer
+const apiRoutes = [
+    {
+        pathKey: "formulas-get",
+        routeKey: "GET /api/formulas",
+    },
+    {
+        pathKey: "formula-get",
+        routeKey: "GET /api/formula/{formulaId}",
+    },
+    {
+        pathKey: "formula-delete",
+        routeKey: "DELETE /api/formula/{formulaId}",
+    },
+    {
+        pathKey: "formula-put",
+        routeKey: "PUT /api/formula/{formulaId}",
+    },
+    {
+        pathKey: "formula-post",
+        routeKey: "POST /api/formula",
+    },
+];
+
+const routeObjects = apiRoutes.map(({ pathKey, routeKey }) => {
+    const lambda = new aws.lambda.Function("lambdaFunction-" + pathKey, {
+        code: new pulumi.asset.FileArchive("../bi-backend/lambda-handlers/" + pathKey + "/bootstrap.zip"),
+        runtime: "provided.al2023",
+        role: lambdaRole.arn,
+        handler: "bootstrap",
+        environment: {
+            variables: {
+                DATABASE_URL: databaseUrl,
+            }
+        },
+    });
+
+    const lambdaPermission = new aws.lambda.Permission("lambdaPermission-" + pathKey, {
+        action: "lambda:InvokeFunction",
+        principal: "apigateway.amazonaws.com",
+        function: lambda,
+        sourceArn: pulumi.interpolate`${apigw.executionArn}/*/*`,
+    }, { dependsOn: [apigw, lambda] });
+
+    const integration = new aws.apigatewayv2.Integration("lambdaIntegration-" + pathKey, {
+        apiId: apigw.id,
+        integrationType: "AWS_PROXY",
+        integrationUri: lambda.arn,
+        integrationMethod: "POST",
+        payloadFormatVersion: "2.0",
+        passthroughBehavior: "WHEN_NO_MATCH",
+    });
+
+    const route = new aws.apigatewayv2.Route("apiRoute-" + pathKey, {
+        apiId: apigw.id,
+        routeKey: routeKey,
+        target: pulumi.interpolate`integrations/${integration.id}`,
+        authorizationType: "JWT", // Specify JWT authorization
+        authorizerId: jwtAuthorizer.id, // Link the authorizer
+    });
+
+    return route;
 });
 
 const stage = new aws.apigatewayv2.Stage("apiStage", {
     apiId: apigw.id,
     name: stack,
-    routeSettings: [
-        {
+    routeSettings: routeObjects.map(route => ({
             routeKey: route.routeKey,
             throttlingBurstLimit: 5000,
             throttlingRateLimit: 10000,
-        },
-    ],
+        }),
+    ),
     autoDeploy: true,
     defaultRouteSettings: {
         detailedMetricsEnabled: true,
@@ -163,7 +189,7 @@ const stage = new aws.apigatewayv2.Stage("apiStage", {
             integrationLatency: "$context.integrationLatency",
         }),
     },
-}, { dependsOn: [route] });
+}, { dependsOn: routeObjects });
 
 export const endpoint = pulumi.interpolate`${apigw.apiEndpoint}/${stage.name}`;
 
