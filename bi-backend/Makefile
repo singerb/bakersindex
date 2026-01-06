@@ -11,4 +11,4 @@ migrate-staging:
 	. .env.staging.local && atlas migrate apply --tx-mode all --revisions-schema public --url $$DATABASE_URL
 
 migrate-local:
-	. .env.local && atlas migrate apply --tx-mode all --revisions-schema public --url $$DATABASE_URL
+	. .env.nonpooled.local && atlas migrate apply --tx-mode all --revisions-schema public --url $$DATABASE_URL

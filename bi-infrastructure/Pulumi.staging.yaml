@@ -1,7 +1,5 @@
 config:
   aws:region: us-east-1
-  bi-infrastructure:databaseUrl:
-    secure: AAABAL+c3J8dGkvXLM0thAgWqB5QKGJDk9J3ybD28BoZSByuiYBwKh6MUNJN1yNtpfJpgA16yUDVjSIejevnfu3kdp5F92Hw22tc07Puzsv04XwyWbURITfdJvURrJ+Bj+fdAiEgIl3JRRpE/2wEYLnWToqDfaedq6loPHrIH7fwIKrmzNxhM7b7/878cwM0Ui2X0o/Y2i1WCtLI1huKK80u5TuPRGEUmQDC/PDj1dHU
   bi-infrastructure:issuerUrl:
     secure: AAABAKRIY8q4AdBTFhXuS027u7SbEhDKf4yqxJ/Mvnx38YwShE59G4v4WF8furAmEg7lifxq5+9QrnWQGuRODfgLFd105rqakWE=
   bi-infrastructure:audience:
