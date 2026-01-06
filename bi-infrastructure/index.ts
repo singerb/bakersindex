@@ -5,16 +5,18 @@ import * as synced_folder from "@pulumi/synced-folder";
 // ---------- CONFIG VALUES & SECRETS -------------
 
 const config = new pulumi.Config();
+const stack = pulumi.getStack();
 
 const path = "../bi-frontend/build/client"
 const indexDocument = "index.html";
-const databaseUrl = config.requireSecret("databaseUrl");
 const issuerUrl = config.requireSecret("issuerUrl");
 const audience = config.requireSecret("audience");
 
-// ---------- LAMBDA & API GATEWAY -------------
+// we get the DB conn string from the Neon pulumi base stack using our name (staging vs production) to pick the right one
+const neonStack = new pulumi.StackReference(`${pulumi.getOrganization()}/bi-neon/base`);
+const databaseUrl = neonStack.getOutput(`${stack}UriPooled`);
 
-const stack = pulumi.getStack();
+// ---------- LAMBDA & API GATEWAY -------------
 
 const apiGatewayLogGroup = new aws.cloudwatch.LogGroup("api-gateway-log-group", {
     // AWS automatically names the log group in a specific format if you don't provide a name,

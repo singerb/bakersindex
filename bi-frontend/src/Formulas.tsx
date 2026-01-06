@@ -13,10 +13,6 @@ export async function clientLoader() {
     await client.loginWithRedirect({ appState: { returnTo: `${window.location.pathname}${window.location.search}` } });
     return;
   }
-  if (!await client.isAuthenticated()) {
-    await client.loginWithRedirect({ appState: { returnTo: `${window.location.pathname}${window.location.search}` } });
-    return;
-  }
   const token = await client.getTokenSilently();
   const query = queryClient.fetchQuery({ queryKey: ['formulas'], queryFn: () => loadFormulas(token) });
 
