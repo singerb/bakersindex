@@ -16,6 +16,11 @@ const audience = config.requireSecret("audience");
 const neonStack = new pulumi.StackReference(`${pulumi.getOrganization()}/bi-neon/base`);
 const databaseUrl = neonStack.getOutput(`${stack}UriPooled`);
 
+// set up our domain names; production goes to domain.com with a www.domain.com alias; all other stacks (e.g. staging) go to {stack}.domain.com with no aliases
+const baseDomain = config.require("domain");
+const targetDomain = stack === "production" ? baseDomain : `${stack}.${baseDomain}`;
+const aliases = stack === "produciton" ? [`www.${baseDomain}`] : [];
+
 // ---------- LAMBDA & API GATEWAY -------------
 
 const apiGatewayLogGroup = new aws.cloudwatch.LogGroup("api-gateway-log-group", {
@@ -162,10 +167,10 @@ const stage = new aws.apigatewayv2.Stage("apiStage", {
     apiId: apigw.id,
     name: stack,
     routeSettings: routeObjects.map(route => ({
-            routeKey: route.routeKey,
-            throttlingBurstLimit: 5000,
-            throttlingRateLimit: 10000,
-        }),
+        routeKey: route.routeKey,
+        throttlingBurstLimit: 5000,
+        throttlingRateLimit: 10000,
+    }),
     ),
     autoDeploy: true,
     defaultRouteSettings: {
@@ -194,6 +199,44 @@ const stage = new aws.apigatewayv2.Stage("apiStage", {
 }, { dependsOn: routeObjects });
 
 export const endpoint = pulumi.interpolate`${apigw.apiEndpoint}/${stage.name}`;
+
+// ---------- DOMAIN & CERT  -------------
+
+// assumes a Route53 Hosted Zone already exists for the domain
+const hostedZone = aws.route53.getZone({ name: baseDomain });
+
+const usEast1Provider = new aws.Provider("us-east-1", {
+    region: "us-east-1",
+});
+
+// request an ACM certificate in us-east-1
+const cert = new aws.acm.Certificate("cert", {
+    domainName: targetDomain,
+    validationMethod: "DNS",
+    subjectAlternativeNames: aliases,
+}, { provider: usEast1Provider });
+
+// need the whole validation flow here; had to adjust the sample code there a bit to make it work for real
+// https://www.pulumi.com/registry/packages/aws/api-docs/acm/certificatevalidation/
+let validationRecord: aws.route53.Record[] = [];
+cert.domainValidationOptions.apply(domainValidationOptions => {
+    validationRecord = domainValidationOptions.map(dvo => {
+        return new aws.route53.Record(`${baseDomain}-validation-v2-${dvo.domainName}`, {
+            allowOverwrite: true,
+            name: dvo.resourceRecordName,
+            records: [dvo.resourceRecordValue],
+            ttl: 60,
+            type: dvo.resourceRecordType,
+            zoneId: hostedZone.then(z => z.zoneId),
+        });
+    }
+);
+});
+
+const certificateValidation = new aws.acm.CertificateValidation(baseDomain + "-validation-v2", {
+    certificateArn: cert.arn,
+    validationRecordFqdns: pulumi.all(validationRecord).apply(validationRecord => validationRecord.map(record => (record.fqdn))),
+});
 
 // ---------- STATIC & CLOUDFRONT -------------
 
@@ -228,10 +271,6 @@ const bucketFolder = new synced_folder.S3BucketFolder("bucket-folder", {
 
 // 1. Create a CloudWatch Log Group in us-east-1 region.
 // Note: The provider must be explicitly set to 'us-east-1' for the log group resource.
-const usEast1Provider = new aws.Provider("us-east-1", {
-    region: "us-east-1",
-});
-
 const cfLogGroup = new aws.cloudwatch.LogGroup("cloudfront-logs", {
     // You can specify retention policies, e.g., 7 days
     retentionInDays: 7,
@@ -401,10 +440,37 @@ const cdn = new aws.cloudfront.Distribution("cdn", {
             restrictionType: "none",
         },
     },
+    aliases: [targetDomain].concat(aliases),
     viewerCertificate: {
-        cloudfrontDefaultCertificate: true,
+        acmCertificateArn: certificateValidation.certificateArn,
+        sslSupportMethod: "sni-only",
+        minimumProtocolVersion: "TLSv1.2_2019",
     },
 });
+
+const record = new aws.route53.Record(targetDomain, {
+    name: targetDomain,
+    zoneId: hostedZone.then(z => z.zoneId),
+    type: "A",
+    aliases: [{
+        name: cdn.domainName,
+        zoneId: cdn.hostedZoneId,
+        evaluateTargetHealth: true,
+    }],
+});
+
+for (const alias of aliases) {
+    const aliasRecord = new aws.route53.Record(alias, {
+        name: alias,
+        zoneId: hostedZone.then(z => z.zoneId),
+        type: "A",
+        aliases: [{
+            name: cdn.domainName,
+            zoneId: cdn.hostedZoneId,
+            evaluateTargetHealth: true,
+        }],
+    });
+}
 
 const cfLogsDeliveryDestination = new aws.cloudwatch.LogDeliveryDestination("cf-logs-delivery", {
     name: "cf-logs-delivery",
