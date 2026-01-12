@@ -1,10 +1,11 @@
-import { ArrowUpRight, Croissant, Folders } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { LoginButton } from '@/components/login-button';
 import { SignupButton } from '@/components/signup-button';
 import { ButtonGroup } from '@/components/ui/button-group';
 import { Separator } from '@/components/ui/separator';
 import { useAuth0 } from '@auth0/auth0-react';
 import { Link } from 'react-router';
+import Logo from "@/Logo";
 
 function Home() {
   const { isAuthenticated } = useAuth0();
@@ -12,8 +13,7 @@ function Home() {
   return (
     <div className="w-full flex flex-col items-center justify-center p-10">
       <div className="flex flex-row py-4">
-        <Croissant size={128} />
-        <Folders size={128} />
+        <Logo width={128} height={128} />
       </div>
       <h1 className="text-6xl block py-4">The Baker's Index</h1>
       <div className="flex flex-row py-4">
