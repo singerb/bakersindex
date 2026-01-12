@@ -1,4 +1,5 @@
 import {
+    Bug,
   ChevronsUpDown,
   LogOut,
 } from "lucide-react"
@@ -80,6 +81,13 @@ export function NavUser() {
                 </div>
               </div>
             </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild className="cursor-pointer">
+              <a href="https://github.com/singerb/bakersindex/issues/new/choose">
+              <Bug />
+              <p>Bugs/Feature Requests</p>
+              </a>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
               <LogOut />
