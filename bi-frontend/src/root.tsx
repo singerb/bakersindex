@@ -4,7 +4,8 @@ import './index.css';
 import { Auth0ProviderWithNavigate } from "./auth0-provider";
 import { useEffect, type ReactNode } from "react";
 import queryClient from "@/query-client";
-import { Spinner } from "./components/ui/spinner";
+import { Spinner } from "@/components/ui/spinner";
+import { EnvTag } from "@/components/env-tag";
 
 export function Layout({ children }: { children: ReactNode }) {
   const matches = useMatches();
@@ -31,7 +32,10 @@ export function Layout({ children }: { children: ReactNode }) {
       <body className="bg-sidebar text-stone-700">
         <Auth0ProviderWithNavigate>
           <QueryClientProvider client={queryClient}>
-            {children}
+            <>
+              <EnvTag />
+              {children}
+            </>
           </QueryClientProvider>
         </Auth0ProviderWithNavigate>
         <ScrollRestoration />
