@@ -22,7 +22,7 @@ clientLoader.hydrate = true as const;
 
 function Formulas({ loaderData: formulas }: { loaderData: Formulas | undefined }) {
   return (
-    <div className="min-h-svh w-full items-center justify-center px-10 pt-0 pb-10">
+    <div className="w-full items-center justify-center px-10 pt-0 pb-10">
       <h1 className="text-6xl">Formulas</h1>
       <div className="flex flex-row flex-wrap">
         {(formulas || []).map((item) => (
