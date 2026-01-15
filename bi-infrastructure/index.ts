@@ -19,7 +19,7 @@ const databaseUrl = neonStack.getOutput(`${stack}UriPooled`);
 // set up our domain names; production goes to domain.com with a www.domain.com alias; all other stacks (e.g. staging) go to {stack}.domain.com with no aliases
 const baseDomain = config.require("domain");
 const targetDomain = stack === "production" ? baseDomain : `${stack}.${baseDomain}`;
-const aliases = stack === "produciton" ? [`www.${baseDomain}`] : [];
+const aliases = stack === "production" ? [`www.${baseDomain}`] : [];
 
 // ---------- LAMBDA & API GATEWAY -------------
 
@@ -354,6 +354,33 @@ const bucketPolicy = new aws.s3.BucketPolicy("spaBucketPolicy", {
 });
 */
 
+// only redirect to www on production (which uses the apex domain + www); all others just use the <stack>.domain.com subdomain
+const wwwRedirectFunction = stack === "production" ? new aws.cloudfront.Function("wwwRedirectFunction", {
+    comment: "Redirects non-www to www",
+    runtime: "cloudfront-js-1.0",
+    code: `
+        function handler(event) {
+            var request = event.request;
+            var host = request.headers.host.value;
+
+            // Check if the host does not start with 'www.'
+            if (!host.startsWith("www.")) {
+                var newUrl = "https://www." + host + request.uri;
+                var response = {
+                    statusCode: 301,
+                    statusDescription: "Moved Permanently",
+                    headers: {
+                        "location": { value: newUrl }
+                    }
+                };
+                return response;
+            }
+            return request;
+        }
+    `,
+    publish: true, // Automatically publish the function to the LIVE stage
+}) : undefined;
+
 // Create a CloudFront CDN to distribute and cache the website.
 const cdn = new aws.cloudfront.Distribution("cdn", {
     enabled: true,
@@ -403,6 +430,10 @@ const cdn = new aws.cloudfront.Distribution("cdn", {
                 forward: "all",
             },
         },
+        functionAssociations: wwwRedirectFunction ? [{
+            eventType: "viewer-request",
+            functionArn: wwwRedirectFunction.arn,
+        }] : undefined,
     },
     orderedCacheBehaviors: [
         {
@@ -481,7 +512,7 @@ const cfLogsDeliveryDestination = new aws.cloudwatch.LogDeliveryDestination("cf-
 
 const cfLogDeliverySource = new aws.cloudwatch.LogDeliverySource("cf-logs-source", {
     region: "us-east-1",
-    name: "cloudfront-logs",
+    name: stack === "staging" ? "cloudfront-logs" : ("cloudfront-logs-" + stack), // messed up the initial name here, so we keep the existing one for staging; all others append -<stack> to get a unique one
     logType: "ACCESS_LOGS",
     resourceArn: cdn.arn,
 });

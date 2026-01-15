@@ -10,5 +10,8 @@ lambda-handlers/%/bootstrap: lambda-handlers/%/handler.go
 migrate-staging:
 	. .env.staging.local && atlas migrate apply --tx-mode all --revisions-schema public --url $$DATABASE_URL
 
+migrate-production:
+	. .env.production.local && atlas migrate apply --tx-mode all --revisions-schema public --url $$DATABASE_URL
+
 migrate-local:
 	. .env.nonpooled.local && atlas migrate apply --tx-mode all --revisions-schema public --url $$DATABASE_URL
