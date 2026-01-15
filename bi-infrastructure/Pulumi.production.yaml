@@ -1,0 +1,7 @@
+config:
+  aws:region: us-east-1
+  bi-infrastructure:audience:
+    secure: AAABAL9/PODjAz7eJTNSX/JCLaHnF8/HN3omIAmiRzcUjZ1RnwVAHUy028H6YTQOlXwuhiIZdw==
+  bi-infrastructure:domain: bakersindex.com
+  bi-infrastructure:issuerUrl:
+    secure: AAABAHO4ocIBxfnN5i7r9Gk6NGgb096na92fea/hHhAxBQPoowrdzufkCfiYSUTliqFrBYbLWtiTYPJu4VU=
