@@ -63,6 +63,9 @@ function Home() {
         </div>
       </div>
       <div className="flex flex-row py-4">
+        <p>Read <a href="https://blog.bakersindex.com">the blog</a> for feature announcements, product disucssions, technical musings, and more.</p>
+      </div>
+      <div className="flex flex-row py-4">
         <p>Found a bug or got a feature suggestion? File it on <a href="https://github.com/singerb/bakersindex/issues/new/choose">our GitHub</a>.</p>
       </div>
     </div>

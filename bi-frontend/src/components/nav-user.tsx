@@ -2,6 +2,7 @@ import {
     Bug,
   ChevronsUpDown,
   LogOut,
+  Rss,
 } from "lucide-react"
 
 import {
@@ -82,6 +83,12 @@ export function NavUser() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem asChild className="cursor-pointer">
+              <a href="https://blog.bakersindex.com">
+              <Rss />
+              <p>Blog</p>
+              </a>
+            </DropdownMenuItem>
             <DropdownMenuItem asChild className="cursor-pointer">
               <a href="https://github.com/singerb/bakersindex/issues/new/choose">
               <Bug />

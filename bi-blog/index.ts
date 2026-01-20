@@ -19,6 +19,7 @@ const example = new github.Repository("bakersindex", {
 	hasIssues: true,
 	hasProjects: true,
 	deleteBranchOnMerge: true,
+	// TODO: the underlying Terraform provider doesn't support enforcing HTTPS here; do it manually in the UI
 	pages: {
 		buildType: "legacy",
 		source: {
@@ -39,6 +40,6 @@ const record = new aws.route53.Record(targetDomain, {
 	zoneId: hostedZone.then(z => z.zoneId),
 	type: "CNAME",
 	ttl: 300,
-	records: currentUser.then(u => [`${u.name}.github.io`]),
+	records: currentUser.then(u => [`${u.username}.github.io`]),
 });
 
