@@ -1,0 +1,13 @@
+{
+    "name": "bi-blog",
+    "main": "index.ts",
+    "devDependencies": {
+        "@types/node": "^18",
+        "typescript": "^5.0.0"
+    },
+    "dependencies": {
+        "@pulumi/aws": "^7.16.0",
+        "@pulumi/github": "^6.10.1",
+        "@pulumi/pulumi": "^3.113.0"
+    }
+}
