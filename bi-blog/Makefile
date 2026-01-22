@@ -1,6 +1,6 @@
-POSTS := $(shell find src/ -maxdepth 1 -type f | sort -r)
+POSTS := $(shell find src/ -maxdepth 1 -type f | grep -E \.md$ | sort -r)
 POSTS_HTML := $(patsubst src/%.md,../docs/%.html,$(POSTS))
-INDEX_POSTS := $(shell find src/ -maxdepth 1 -type f | sort -r | head -n 1)
+INDEX_POSTS := $(shell find src/ -maxdepth 1 -type f | grep -E \.md$ | sort -r | head -n 1)
 
 .PHONY: all clean images
 all: ../docs/index.html $(POSTS_HTML) images
