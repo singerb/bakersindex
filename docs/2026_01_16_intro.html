@@ -1145,16 +1145,35 @@ a.permalink:hover{
 <hr />
 <!-- raw HTML omitted -->
 <h2 id="introduction">Introduction</h2>
-<p>Welcome to The Baker's Index! This blog will discuss product and technical issues for The Baker's Index, as well as announce new features.</p>
-<h2 id="rationale">Rationale</h2>
-<p>I made this because I wanted to.</p>
+<p>Welcome to The Baker's Index! This blog (in general) will discuss product and technical issues for The Baker's Index, as well as announce new features; this post (in particular) will talk about the inspiration for this webapp, and some of the high level choices that went into it.</p>
+<h2 id="rationale-baking">Rationale (Baking)</h2>
+<p>I'm a baker: bread, pizza, rolls, sourdough, and more. While I bake from many cookbooks, I also have some recipes (from workshops, or online posts) that I've put into a spreadsheet and set up the calculations to let me scale them up and down easily. Recipes like this are usually specified in <a href="https://en.wikipedia.org/wiki/Baker_percentage">baker's percentages</a>, where the flour is given as 100% and everything else is relative to that; thus, in a recipe with 100% flour and 65% water, if you were using 100g of flour, you would use 65g of water. Similarly, if you know you want to bake a 200g loaf, you can work the math backwards to figure out all the input weights to end up with 200g at the end.</p>
+<p><img src="./spreadsheet.png" alt="Baking Spreadsheet" /></p>
+<p>My spreadsheets work well, but it's annoying to set them up, even for someone comfortable with spreadsheets, and as a result I only have a few recipes entered in them. Google Sheets is also not a great experience on a phone, which is what I usually have in the kitchen while baking. So, while thinking about my next technical project, the idea came to mind to make a webapp to simplify all of the calculations and setup, while also being nice to use on mobile - and thus The Baker's Index was born.</p>
+<h2 id="rationale-software-development">Rationale (Software Development)</h2>
+<p>As mentioned, I was looking for a good personal project to work on, for a variety of reasons: to keep my skills sharp, to learn some new technologies, to build something satisfying, to be able to put some cloud and IaC skills on my resume, and maybe to try monetizing a webapp myself. Notably, I wanted to build something that would not be deployed on my VPS as a standard backend server behind nginx and a static frontend, but would use modern cloud and serverless technologies. My professional experience has been with in-house servers and datacenters, and custom frameworks, rather than things like AWS, IaC, etc, and I wanted to rectify that.</p>
+<h2 id="product-mvp">Product MVP</h2>
+<p>One thing I did carry over from my professional experience is the importance of getting something out early and iterating on it; even if I'm the only one that ever uses this, I'll learn much more about how it should work by using it myself vs over-planning it. I also knew that I'd have to spend some time on the deployment aspect, due to all the novel (to me) elements there. So this initial version is quite stripped down: you can enter, edit, and delete bread formulas in baker's percentages; you can enter a target amount and weight, and have it update the input weights for you; and that's really about it. There's so much more I want to add already (descriptions, entering formulas in grams or percentages, selecting target weights from a list of named final products, sub-formulas to calculate pre-dough builds for you, and more), but this is about as usable as my spreadsheets were, and now that it's deployed I can iterate quickly.</p>
+<h2 id="technical-choices">Technical Choices</h2>
+<p>I challenged myself with two specific things with this project: I wanted to use &quot;modern&quot; cloud infrastructure, but I wanted to pay as little as possible for it! After some investigation, I settled on the following:</p>
+<ul>
+<li>Neon for the database; this is serverless PostgreSQL, with a generous free tier. Supabase would likely work as well here.</li>
+<li>AWS Lambda for the backend; I expect minimal and sporadic usage, at least to start, which makes serverless compute compelling. At the scale I'm talking about, this may as well be free, and because it's behind a standard REST API, I can move it to full servers, other serverless compute, or anything else I like with ease.</li>
+<li>Static SPA frontend, hosted on S3; I didn't want to have to use any compute to serve the frontend, so a full-on SPA was the way to go. Like the backend API, this also frees me up to swap out the hosting here since there's no coupling between the two.</li>
+<li>React for building that frontend; while there are other frontend technologies out there, React is very very common. Plus, I wanted to learn things like React Router and Tanstack Query/Form (there's a future blog post here about getting these all to play nicely in an SPA).</li>
+<li>Go for the backend API; no particular reason other than I wanted to learn it. TypeScript would've been quicker for me, but that wasn't really the point here. I used GORM for the database layer, and gorilla/mux for a local development server.</li>
+<li>Auth0 for authentication; I wanted to offer social login, have e-mail verification, etc, but did not want to implement all of that myself (especially anything needing e-mail)! Like Neon, Auth0 solves this for me, and has a generous free tier that even allows custom domains and branding.</li>
+<li>Pulumi as the IaC to manage all the infrastructure and deployments; once you get over the initial hump, this is IMO actually easier than trying to set this all up in the AWS web UI. More importantly, it's repeatable and documented, and easy to have make you a staging deployment as well. I don't have this integrated with GitHub to do the classic &quot;push to staging/main branch, auto-deploy to staging/production&quot; workflow; I might at some point, but with only one developer it's not a huge priority. I considered SST and Terraform here, but SST seemed a bit too high level and hard to go off the beaten path, while I can't get past the Terraform syntax.</li>
+</ul>
+<p>There was one notable choice I considered, and ultimately decided against: hosting this all on the free Vercel tier. Having now done all the infrastructure work myself, I appreciate getting that all abstracted away and done for me; however, I wanted to learn how to actually do this on the underlying infrastructure. Fly.io might also be a nice way to host this, but I felt it was more important to be able to list AWS-related skills on my resume.</p>
+<h2 id="whats-next">What's Next</h2>
+<p>Iteration! More features, getting more of the recipes I use regularly input, and putting it through its paces. You can follow along on <a href="https://github.com/singerb/bakersindex">GitHub</a>, where I'm using my product and planning skills to keep a <a href="https://github.com/users/singerb/projects/5/views/1">basic roadmap setup</a> going. Feel free to <a href="https://github.com/singerb/bakersindex/issues/new/choose">add bugs and feature requests</a> there, and otherwise go <a href="https://www.bakersindex.com">check out the site</a> and use it if you're a baker!</p>
 <hr />
 <p><a href="https://www.bakersindex.com">The Baker's Index</a> | <a href="https://github.com/singerb/bakersindex/issues/new/choose">Bugs &amp; feature requests</a></p>
 </div><!-- "main" -->
 <div class="sidebar markdown-body">
 <h3 id="articles">Articles</h3>
 <ul>
-<li><a href="2026_01_17_empty_state.html">Empty State</a></li>
 <li><a href="2026_01_16_intro.html">Introduction</a></li>
 </ul>
 </div><!-- "sidebar" -->

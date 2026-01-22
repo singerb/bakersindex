@@ -1,6 +1,6 @@
 #!/bin/sh
 
-POSTS=`find src/ -maxdepth 1 -type f | sort -r`
+POSTS=`find src/ -maxdepth 1 -type f | grep -E '\.md$' | sort -r`
 
 echo "### Articles"
 
