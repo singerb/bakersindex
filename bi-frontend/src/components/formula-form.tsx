@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Spinner } from "@/components/ui/spinner";
 import { useState } from "react";
 import { Card, CardContent } from "./ui/card";
+import { Textarea } from "@/components/ui/textarea";
 
 type State = "normal" | "submitting";
 
@@ -30,6 +31,7 @@ const formSchema = z.object({
   // TODO: use .refine() on this array to validate that the 1 base elemenet has 100% set
   // TODO: use .refine() on this array to validate that ingredients are unique?
   baseIndex: z.string(), // TODO: this is annoying but makes the select easier
+  description: z.string().optional(),
 });
 
 export type FormSchema = z.infer<typeof formSchema>;
@@ -111,6 +113,23 @@ function FormulaForm({ submitFn, cancelFn, submitText, submitButtonText, formTit
                         </Field>
                       )
                     }}
+                  />
+                  <form.Field
+                    name="description"
+                    children={(field) => (
+                      <Field>
+                        <FieldLabel htmlFor={field.name}>Description</FieldLabel>
+                        <Textarea
+                          id={field.name}
+                          name={field.name}
+                          value={field.state.value ?? ""}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          placeholder="Notes about this formula..."
+                          rows={4}
+                        />
+                      </Field>
+                    )}
                   />
                 </FieldGroup>
                 <form.Subscribe

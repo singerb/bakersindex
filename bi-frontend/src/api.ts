@@ -10,18 +10,32 @@ const Part = z.object({
   isBase: z.boolean(),
 });
 
+const Meta = z.object({
+  id: z.number(),
+  type: z.string(),
+  value: z.string(),
+});
+
 const Formula = z.object({
   id: z.number(),
   name: z.string(),
   parts: z.array(Part),
+  metas: z.array(Meta),
 });
 
 const Formulas = z.array(z.object({id: z.number(), name: z.string()}));
+
+const MetaInput = z.object({
+  id: z.number().optional(),
+  type: z.string(),
+  value: z.string(),
+});
 
 // TODO: can zod do extension, i.e. define this and then add an id to it? yes, we can spread or .extend()
 const FormulaInput = z.object({
   id: z.number().optional(),
   name: z.string(),
+  metas: z.array(MetaInput).optional(),
 });
 
 const PartInput = z.object({
@@ -38,9 +52,20 @@ const Status = z.object({
 export type Formulas = z.infer<typeof Formulas>;
 export type Formula = z.infer<typeof Formula>;
 export type Part = z.infer<typeof Part>;
+export type Meta = z.infer<typeof Meta>;
 export type FormulaInput = z.infer<typeof FormulaInput>;
 export type PartInput = z.infer<typeof PartInput>;
+export type MetaInput = z.infer<typeof MetaInput>;
 export type Status = z.infer<typeof Status>;
+
+export function upsertMeta(existing: Meta[], type: string, value: string | undefined): MetaInput[] {
+  const others = existing
+    .filter((m) => m.type !== type)
+    .map((m) => ({ id: m.id, type: m.type, value: m.value }));
+  if (!value) return others;
+  const existingEntry = existing.find((m) => m.type === type);
+  return [...others, { id: existingEntry?.id, type, value }];
+}
 
 export async function loadFormulas(accessToken: string) {
   const formulas = await upfetch(import.meta.env.VITE_API_BASE + "/formulas", {

@@ -1,4 +1,4 @@
-import { createFormula } from "@/api";
+import { createFormula, upsertMeta } from "@/api";
 import queryClient from "@/query-client";
 import client from "@/auth0-client";
 import { useNavigate, useRevalidator } from "react-router";
@@ -16,13 +16,15 @@ function CreateFormula() {
     name: "",
     parts: [{ ingredient: "Flour", percent: 100.0, isBase: true }],
     baseIndex: "0",
+    description: "",
   };
 
   const submitFn = async ({ value }: { value: FormSchema }) => {
     const token = await client.getTokenSilently();
 
     // await API post, get formula back
-    const newFormula = await createFormula(token, value);
+    const metas = upsertMeta([], "description", value.description);
+    const newFormula = await createFormula(token, { ...value, metas });
     // console.log(newFormula);
 
     // invalidate all formulas and refetch
