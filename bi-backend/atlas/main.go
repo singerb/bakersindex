@@ -14,6 +14,7 @@ func main() {
     stmts, err := gormschema.New("postgres").Load(
 		&lib.Formula{},
 		&lib.FormulaPart{},
+		&lib.FormulaMeta{},
 	)
     if err != nil {
         fmt.Fprintf(os.Stderr, "failed to load gorm schema: %v\n", err)
