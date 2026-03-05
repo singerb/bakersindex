@@ -132,6 +132,26 @@ func EditFormula(db *gorm.DB, userId string, formulaId uint, formulaInput *Formu
 	return *formulaInput, err
 }
 
+func UpsertFormulaMetas(db *gorm.DB, userId string, formulaId uint, metas []FormulaMeta) ([]FormulaMeta, error) {
+	ctx := context.Background()
+	// Verify formula belongs to user
+	_, err := gorm.G[Formula](db).Where(&Formula{Model: Model{ID: formulaId}, User: userId}).First(ctx)
+	if err != nil {
+		return nil, err
+	}
+	// Upsert each meta by type (insert if not exists, update value if exists)
+	for i, meta := range metas {
+		metas[i].FormulaID = formulaId
+		err = db.Where(FormulaMeta{FormulaID: formulaId, Type: meta.Type}).
+			Assign(FormulaMeta{Value: meta.Value}).
+			FirstOrCreate(&metas[i]).Error
+		if err != nil {
+			return nil, err
+		}
+	}
+	return metas, nil
+}
+
 func DeleteFormula(db *gorm.DB, userId string, formulaId uint) error {
 	// do this delete with the traditional API to handle cleaning up the relations along with the formula
 	err := db.Select(clause.Associations).Where(&Formula{User: userId}).Delete(&Formula{Model: Model{ID: formulaId}}).Error

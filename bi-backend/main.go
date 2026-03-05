@@ -125,6 +125,30 @@ func main() {
 		json.NewEncoder(w).Encode(fullFormula)
 	})).Methods("PUT")
 
+	r.HandleFunc("/formula/{formulaId}/meta", middleware.ValidateJWT(audience, domain, func(w http.ResponseWriter, r *http.Request) {
+		userId, err := checkUser(w, r)
+		if err != nil {
+			return
+		}
+
+		vars := mux.Vars(r)
+		formulaId, err := strconv.ParseUint(vars["formulaId"], 10, 0)
+		if err != nil {
+			http.Error(w, "failed to parse formula id", http.StatusInternalServerError)
+			return
+		}
+
+		var metas []lib.FormulaMeta
+		json.NewDecoder(r.Body).Decode(&metas)
+
+		result, err := lib.UpsertFormulaMetas(db, userId, uint(formulaId), metas)
+		if err != nil {
+			http.Error(w, "failed to patch metas", http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(result)
+	})).Methods("PATCH")
+
 	r.HandleFunc("/formula", middleware.ValidateJWT(audience, domain, func(w http.ResponseWriter, r *http.Request) {
 		userId, err := checkUser(w, r)
 		if err != nil {
@@ -146,7 +170,7 @@ func main() {
 	r.HandleFunc("/", middleware.NotFoundHandler)
 
 	// TODO: better CORS headers
-	corsWrap := handlers.CORS(handlers.AllowedOrigins([]string{"*"}), handlers.AllowedHeaders([]string{"Authorization", "Content-Type"}), handlers.AllowedMethods([]string{"GET", "POST", "DELETE", "PUT"}))(r)
+	corsWrap := handlers.CORS(handlers.AllowedOrigins([]string{"*"}), handlers.AllowedHeaders([]string{"Authorization", "Content-Type"}), handlers.AllowedMethods([]string{"GET", "POST", "DELETE", "PUT", "PATCH"}))(r)
 
 	// log our requests
 	logWrap := handlers.LoggingHandler(os.Stdout, corsWrap)

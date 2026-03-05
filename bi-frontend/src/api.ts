@@ -123,6 +123,22 @@ export async function editFormula(
   return fullFormula;
 }
 
+export async function patchFormulaMetas(
+  accessToken: string,
+  formulaId: number,
+  metas: MetaInput[],
+) {
+  return await upfetch(
+    import.meta.env.VITE_API_BASE + "/formula/" + formulaId + "/meta",
+    {
+      method: "PATCH",
+      body: metas,
+      schema: z.array(Meta),
+      headers: { Authorization: "Bearer " + accessToken },
+    },
+  );
+}
+
 export async function deleteFormula(accessToken: string, formulaId: number) {
   const status = await upfetch(
     import.meta.env.VITE_API_BASE + "/formula/" + formulaId,

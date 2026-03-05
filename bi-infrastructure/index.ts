@@ -121,6 +121,10 @@ const apiRoutes = [
         pathKey: "formula-post",
         routeKey: "POST /api/formula",
     },
+    {
+        pathKey: "formula-meta-patch",
+        routeKey: "PATCH /api/formula/{formulaId}/meta",
+    },
 ];
 
 const routeObjects = apiRoutes.map(({ pathKey, routeKey }) => {

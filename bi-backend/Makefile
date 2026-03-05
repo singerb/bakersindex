@@ -1,5 +1,5 @@
 .PHONY: build migrate-staging migrate-local
-build: lambda-handlers/formulas-get/bootstrap.zip lambda-handlers/formula-get/bootstrap.zip lambda-handlers/formula-delete/bootstrap.zip lambda-handlers/formula-put/bootstrap.zip lambda-handlers/formula-post/bootstrap.zip
+build: lambda-handlers/formulas-get/bootstrap.zip lambda-handlers/formula-get/bootstrap.zip lambda-handlers/formula-delete/bootstrap.zip lambda-handlers/formula-put/bootstrap.zip lambda-handlers/formula-post/bootstrap.zip lambda-handlers/formula-meta-patch/bootstrap.zip
 
 lambda-handlers/%/bootstrap.zip: lambda-handlers/%/bootstrap
 	zip -j $@ $<
