@@ -1,4 +1,4 @@
-import { deleteFormula, editFormula, type Formula, loadFormula, upsertMeta } from "@/api";
+import { deleteFormula, editFormula, type Formula, loadFormula, patchFormulaMetas, upsertMeta } from "@/api";
 import queryClient from "@/query-client";
 import client from "@/auth0-client";
 import { useNavigate, useRevalidator } from "react-router";
@@ -6,7 +6,7 @@ import { Field, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash } from "lucide-react";
 import { Table, TableCaption, TableHeader, TableHead, TableRow, TableBody, TableCell, TableFooter } from "@/components/ui/table";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import FormulaForm, { type FormSchema } from "@/components/formula-form";
@@ -40,9 +40,31 @@ function Formula({ loaderData: formula }: { loaderData: Formula | undefined }) {
   const { revalidate } = useRevalidator();
   const [state, setState] = useState<State>("normal");
 
-  // TODO: eventually these need to be persisted per-formula in meta
-  const [quantity, setQuantity] = useState(1);
-  const [weightPer, setWeightPer] = useState(875);
+  const [quantity, setQuantity] = useState(() => {
+    const v = formula.metas.find((m) => m.type === "quantity")?.value;
+    return v ? parseInt(v) : 1;
+  });
+  const [weightPer, setWeightPer] = useState(() => {
+    const v = formula.metas.find((m) => m.type === "weightPer")?.value;
+    return v ? parseFloat(v) : 875;
+  });
+
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const saveMetas = async (q: number, w: number) => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = null;
+    const token = await client.getTokenSilently();
+    await patchFormulaMetas(token, formula.id, [
+      { type: "quantity", value: String(q) },
+      { type: "weightPer", value: String(w) },
+    ]);
+  };
+
+  const scheduleSave = (q: number, w: number) => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => saveMetas(q, w), 800);
+  };
 
   if (!formula) {
     return;
@@ -133,11 +155,11 @@ function Formula({ loaderData: formula }: { loaderData: Formula | undefined }) {
               <FieldGroup>
                 <Field orientation="horizontal">
                   <FieldLabel>Quantity</FieldLabel>
-                  <Input type="number" value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value))} />
+                  <Input type="number" value={quantity} onChange={(e) => { const v = parseInt(e.target.value); setQuantity(v); scheduleSave(v, weightPer); }} onBlur={() => saveMetas(quantity, weightPer)} />
                 </Field>
                 <Field orientation="horizontal">
                   <FieldLabel>Weight Per</FieldLabel>
-                  <Input type="number" value={weightPer} onChange={(e) => setWeightPer(parseFloat(e.target.value))} />
+                  <Input type="number" value={weightPer} onChange={(e) => { const v = parseFloat(e.target.value); setWeightPer(v); scheduleSave(quantity, v); }} onBlur={() => saveMetas(quantity, weightPer)} />
                 </Field>
               </FieldGroup>
             </FieldSet>
