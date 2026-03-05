@@ -113,6 +113,19 @@ func EditFormula(db *gorm.DB, userId string, formulaId uint, formulaInput *Formu
 		return *formulaInput, err
 	}
 
+	// same treatment for metas: delete any that were removed
+	existingMetaIds := []uint{}
+	for _, e := range formulaInput.Metas {
+		if e.ID > 0 {
+			existingMetaIds = append(existingMetaIds, e.ID)
+		}
+	}
+
+	err = db.Not(existingMetaIds).Where(&FormulaMeta{FormulaID: formulaId}).Delete(&FormulaMeta{}).Error
+	if err != nil {
+		return *formulaInput, err
+	}
+
 	// this will insert any new parts
 	err = db.Session(&gorm.Session{FullSaveAssociations: true}).Where(&Formula{Model: Model{ID: formulaId}, User: userId}).Updates(&formulaInput).Error
 
