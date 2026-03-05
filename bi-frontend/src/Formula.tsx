@@ -1,4 +1,4 @@
-import { deleteFormula, editFormula, type Formula, loadFormula } from "@/api";
+import { deleteFormula, editFormula, type Formula, loadFormula, upsertMeta } from "@/api";
 import queryClient from "@/query-client";
 import client from "@/auth0-client";
 import { useNavigate, useRevalidator } from "react-router";
@@ -93,13 +93,15 @@ function Formula({ loaderData: formula }: { loaderData: Formula | undefined }) {
     const defaultValues = {
       ...formula,
       baseIndex: formula.parts.findIndex((part) => part.isBase).toString(),
+      description: formula.metas.find((m) => m.type === "description")?.value ?? "",
     };
 
     const submitFn = async ({ value }: { value: FormSchema }) => {
       const token = await client.getTokenSilently();
 
       // await API post, get formula back
-      await editFormula(token, formula.id, value);
+      const metas = upsertMeta(formula.metas, "description", value.description);
+      await editFormula(token, formula.id, { ...value, metas });
       // console.log(newFormula);
 
       // invalidate all formulas and refetch
@@ -174,7 +176,7 @@ function Formula({ loaderData: formula }: { loaderData: Formula | undefined }) {
         <Card className="min-w-2xs lg:min-w-auto">
           <CardContent>
             <h3 className="text-2xl">Description</h3>
-            <p>Coming soon...</p>
+            <p>{formula.metas.find((m) => m.type === "description")?.value || "No description."}</p>
           </CardContent>
         </Card>
       </div>

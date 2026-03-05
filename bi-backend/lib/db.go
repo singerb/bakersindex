@@ -7,6 +7,7 @@ import (
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"gorm.io/gorm/logger"
 )
 
@@ -22,6 +23,7 @@ type Formula struct {
 	Name string `json:"name"`
 	User string `json:"user" gorm:"index"`
 	Parts []FormulaPart `json:"parts"`
+	Metas []FormulaMeta `json:"metas"`
 }
 
 type FormulaPart struct {
@@ -29,6 +31,13 @@ type FormulaPart struct {
 	Ingredient string `json:"ingredient"`
 	Percent float32 `json:"percent"`
 	IsBase bool `json:"isBase"`
+	FormulaID uint `json:"-"`
+}
+
+type FormulaMeta struct {
+	Model
+	Type string `json:"type"`
+	Value string `json:"value"`
 	FormulaID uint `json:"-"`
 }
 
@@ -64,6 +73,7 @@ func SetupDB(db *gorm.DB) error {
 
 func GetFormulas(db *gorm.DB, userId string) ([]Formula, error) {
 	ctx := context.Background()
+	// TOOD: would love to get description in here
 	formulas, err := gorm.G[Formula](db).Where(&Formula{User: userId}).Find(ctx)
 
 	return formulas, err
@@ -71,7 +81,7 @@ func GetFormulas(db *gorm.DB, userId string) ([]Formula, error) {
 
 func GetFormula(db *gorm.DB, userId string, formulaId uint) (Formula, error) {
 	ctx := context.Background()
-	formula, err := gorm.G[Formula](db).Preload("Parts", nil).Where(&Formula{Model: Model{ID: formulaId}, User: userId}).First(ctx)
+	formula, err := gorm.G[Formula](db).Preload("Parts", nil).Preload("Metas", nil).Where(&Formula{Model: Model{ID: formulaId}, User: userId}).First(ctx)
 
 	return formula, err
 }
@@ -103,6 +113,19 @@ func EditFormula(db *gorm.DB, userId string, formulaId uint, formulaInput *Formu
 		return *formulaInput, err
 	}
 
+	// same treatment for metas: delete any that were removed
+	existingMetaIds := []uint{}
+	for _, e := range formulaInput.Metas {
+		if e.ID > 0 {
+			existingMetaIds = append(existingMetaIds, e.ID)
+		}
+	}
+
+	err = db.Not(existingMetaIds).Where(&FormulaMeta{FormulaID: formulaId}).Delete(&FormulaMeta{}).Error
+	if err != nil {
+		return *formulaInput, err
+	}
+
 	// this will insert any new parts
 	err = db.Session(&gorm.Session{FullSaveAssociations: true}).Where(&Formula{Model: Model{ID: formulaId}, User: userId}).Updates(&formulaInput).Error
 
@@ -111,7 +134,7 @@ func EditFormula(db *gorm.DB, userId string, formulaId uint, formulaInput *Formu
 
 func DeleteFormula(db *gorm.DB, userId string, formulaId uint) error {
 	// do this delete with the traditional API to handle cleaning up the relations along with the formula
-	err := db.Select("Parts").Where(&Formula{User: userId}).Delete(&Formula{Model: Model{ID: formulaId}}).Error
+	err := db.Select(clause.Associations).Where(&Formula{User: userId}).Delete(&Formula{Model: Model{ID: formulaId}}).Error
 
 	return err
 }
