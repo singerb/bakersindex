@@ -23,7 +23,7 @@ const Formula = z.object({
   metas: z.array(Meta),
 });
 
-const Formulas = z.array(z.object({id: z.number(), name: z.string()}));
+const Formulas = z.array(z.object({id: z.number(), name: z.string(), metas: z.array(Meta)}));
 
 const MetaInput = z.object({
   id: z.number().optional(),
