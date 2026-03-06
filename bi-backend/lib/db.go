@@ -72,10 +72,10 @@ func SetupDB(db *gorm.DB) error {
 }
 
 func GetFormulas(db *gorm.DB, userId string) ([]Formula, error) {
-	ctx := context.Background()
-	// TOOD: would love to get description in here
-	formulas, err := gorm.G[Formula](db).Where(&Formula{User: userId}).Find(ctx)
-
+	var formulas []Formula
+	err := db.Where(&Formula{User: userId}).
+		Preload("Metas", "type = ?", "description").
+		Find(&formulas).Error
 	return formulas, err
 }
 

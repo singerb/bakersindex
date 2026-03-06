@@ -2,7 +2,7 @@ import { Link } from "react-router";
 import { loadFormulas, type Formulas } from "./api"
 import queryClient from "@/query-client";
 import client from "@/auth0-client";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/empty-state";
 
 export const handle = {
@@ -35,6 +35,13 @@ function Formulas({ loaderData: formulas }: { loaderData: Formulas | undefined }
                 <Link to={"/formula/" + item.id}>{item.name}</Link>
               </CardTitle>
             </CardHeader>
+            {item.metas.find((m) => m.type === "description")?.value && (
+              <CardContent>
+                <p className="text-sm text-muted-foreground line-clamp-2">
+                  {item.metas.find((m) => m.type === "description")?.value}
+                </p>
+              </CardContent>
+            )}
           </Card>
         ))}
       </div>}
